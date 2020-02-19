@@ -69,16 +69,16 @@ namespace GlobalLogic_Test_Task
         private void AddDirectoryNodes(MyTreeHelper<DirectoryModel> treeView, DirectoryInfo directoryInfo, MyTreeHelper<DirectoryModel> parent)
         {
 
-            MyTreeHelper<DirectoryModel> dir_node;
+            MyTreeHelper<DirectoryModel> dirNode;
             DirectoryModel directoryModel = SetDirectoryModel(directoryInfo);
 
             if (parent == null)
-                dir_node = treeView.AddChild(directoryModel);
+                dirNode = treeView.AddChild(directoryModel);
             else
-                dir_node = parent.AddChild(directoryModel);
+                dirNode = parent.AddChild(directoryModel);
 
-            foreach (DirectoryInfo subdir in directoryInfo.GetDirectories())
-                AddDirectoryNodes(treeView, subdir, dir_node);
+            foreach (DirectoryInfo subDir in directoryInfo.GetDirectories())
+                AddDirectoryNodes(treeView, subDir, dirNode);
 
         }
 
