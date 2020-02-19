@@ -18,48 +18,44 @@ namespace GlobalLogic_Test_Task
 
         private async void btn_choose_folder_Click(object sender, EventArgs e)
         {
+            btn_choose_folder.Enabled = false;
             using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog())
             {
                 if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
                 {
                     string folderPath = folderBrowserDialog.SelectedPath;
-
-                    bool result = await Task.Run(() => Json_Folder_Hierarchy_Formatter(folderPath));
+                    textBox_input.Text = folderPath;
+                    bool result = await Task.Run(() => JsonFolderHierarchyFormatter(folderPath));
                     if (result)
                         label_if_success.Text = "Success";
                     else
-                        label_if_success.Text = "Failde";
+                        label_if_success.Text = "Failed";
                 }
             }
+            btn_choose_folder.Enabled = true;
         }
-        private bool Json_Folder_Hierarchy_Formatter(string folderPath)
+        private bool JsonFolderHierarchyFormatter(string folderPath)
         {
+            string outputFile = Environment.CurrentDirectory + "\\FolderHierarchy.json";
             label_if_success.Text = "Proccessing";
-            DirectoryInfo base_folder = new DirectoryInfo(folderPath);
-            if (base_folder.Exists)
+            DirectoryInfo baseFolder = new DirectoryInfo(folderPath);
+            if (baseFolder.Exists)
             {
-                MyTreeHelper<DirectoryModel> myTree = new MyTreeHelper<DirectoryModel>(new DirectoryModel
-                {
-                    Name = base_folder.Name,
-                    DateCreated = base_folder.CreationTime.ToString("dd-MMMM-yy hh:mm tt"),
-                    Files = base_folder.GetFiles()
-                        .Select(x => new FileModel
-                        {
-                            Name = x.Name,
-                            Size = x.Length.ToString() + " B",
-                            Path = x.FullName
-                        }).ToList()
-                });
+                MyTreeHelper<DirectoryModel> myTree = new MyTreeHelper<DirectoryModel>(SetDirectoryModel(baseFolder));
                 MakeTreeView(folderPath, myTree);
-                JsonSerializer jsonSerializer = new JsonSerializer();
-                jsonSerializer.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                using (StreamWriter sw = new StreamWriter(Environment.CurrentDirectory + "\\test.json"))
+                JsonSerializer jsonSerializer = new JsonSerializer()
+                {
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+                using (StreamWriter sw = new StreamWriter(outputFile))
                 {
                     using (JsonWriter writer = new JsonTextWriter(sw))
                     {
                         jsonSerializer.Serialize(writer, myTree);
                     }
                 }
+                textBox_output.Text = outputFile;
                 return true;
             }
             return false;
@@ -74,7 +70,21 @@ namespace GlobalLogic_Test_Task
         {
 
             MyTreeHelper<DirectoryModel> dir_node;
-            DirectoryModel directoryModel = new DirectoryModel
+            DirectoryModel directoryModel = SetDirectoryModel(directoryInfo);
+
+            if (parent == null)
+                dir_node = treeView.AddChild(directoryModel);
+            else
+                dir_node = parent.AddChild(directoryModel);
+
+            foreach (DirectoryInfo subdir in directoryInfo.GetDirectories())
+                AddDirectoryNodes(treeView, subdir, dir_node);
+
+        }
+
+        private DirectoryModel SetDirectoryModel(DirectoryInfo directoryInfo)
+        {
+            return new DirectoryModel
             {
                 Name = directoryInfo.Name,
                 DateCreated = directoryInfo.CreationTime.ToString("dd-MMMM-yy hh:mm tt"),
@@ -86,15 +96,6 @@ namespace GlobalLogic_Test_Task
                         Path = x.FullName
                     }).ToList()
             };
-
-            if (parent == null)
-                dir_node = treeView.AddChild(directoryModel);
-            else
-                dir_node = parent.AddChild(directoryModel);
-
-            foreach (DirectoryInfo subdir in directoryInfo.GetDirectories())
-                AddDirectoryNodes(treeView, subdir, dir_node);
-
         }
     }
 }

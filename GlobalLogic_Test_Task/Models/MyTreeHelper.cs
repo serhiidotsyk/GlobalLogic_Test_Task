@@ -7,21 +7,15 @@ namespace GlobalLogic_Test_Task.Models
 {
     public class MyTreeHelper<T>
     {
-        private readonly T _value;
         private readonly List<MyTreeHelper<T>> _children = new List<MyTreeHelper<T>>();
         public MyTreeHelper(T value)
         {
-            _value = value;
-        }
-
-        public MyTreeHelper<T> this[int i]
-        {
-            get { return _children[i]; }
+            Value = value;
         }
 
         public MyTreeHelper<T> Parent { get; private set; }
 
-        public T Value { get { return _value; } }
+        public T Value { get; }
 
         public ReadOnlyCollection<MyTreeHelper<T>> Children
         {
@@ -35,26 +29,9 @@ namespace GlobalLogic_Test_Task.Models
             return node;
         }
 
-        public MyTreeHelper<T>[] AddChildren(params T[] values)
-        {
-            return values.Select(AddChild).ToArray();
-        }
-
         public bool RemoveChild(MyTreeHelper<T> node)
         {
             return _children.Remove(node);
-        }
-
-        public void Traverse(Action<T> action)
-        {
-            action(Value);
-            foreach (var child in _children)
-                child.Traverse(action);
-        }
-
-        public IEnumerable<T> Flatten()
-        {
-            return new[] { Value }.Concat(_children.SelectMany(x => x.Flatten()));
         }
     }
 }

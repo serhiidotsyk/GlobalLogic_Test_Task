@@ -10,7 +10,7 @@ namespace GlobalLogic_Test_Task.Models
     {
         public string Name { get; set; }
         public string DateCreated { get; set; }
-        public List<FileModel> Files { get; set; }
+        public IEnumerable<FileModel> Files { get; set; }
 
     }
 }
